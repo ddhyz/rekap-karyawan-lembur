@@ -13,6 +13,10 @@ if uploaded_file:
     # Baca data absensi
     df = pd.read_excel(uploaded_file)
 
+    # Hapus kolom yang tidak perlu (jika ada)
+    drop_cols = ["Lokasi ID", "ID Number", "VerifyCode", "CardNo", "Jam."]
+    df = df.drop(columns=[c for c in drop_cols if c in df.columns], errors="ignore")
+
     # Pastikan ada kolom 'Tgl/Waktu'
     if "Tgl/Waktu" in df.columns:
         # Konversi ke datetime
