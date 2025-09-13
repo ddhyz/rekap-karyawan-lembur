@@ -4,10 +4,10 @@ import pandas as pd
 from datetime import time
 from io import BytesIO
 from openpyxl import load_workbook
-from openpyxl.worksheet.table import Table, TableStyleInfo
+from openpyxl.styles import Border, Side
 
 # Judul aplikasi
-st.title("📊 Rekap Absensi: Lembur & Pulang Lebih Awal")
+st.title("📊 Rekap Lembur PT. Quantum")
 
 # Upload file absensi
 uploaded_file = st.file_uploader("📂 Upload File Absensi Excel", type=["xlsx", "xls"])
@@ -34,40 +34,32 @@ if uploaded_file:
         # Filter data pulang lebih awal (17:40–18:04)
         pulang_awal = df[(df["Jam"] >= time(17, 40)) & (df["Jam"] <= time(18, 4))]
 
-        # Tampilkan tabel di Streamlit
+        # Tampilkan tabel di aplikasi
         st.write("### 👨‍💻 Karyawan Lembur (Pulang > 18:05)")
         st.dataframe(lembur)
 
         st.write("### 🏃 Karyawan Pulang Lebih Awal (17:40–18:04)")
         st.dataframe(pulang_awal)
 
-        # Fungsi export ke Excel dengan Table
+        # Fungsi export ke Excel dengan border
         def to_excel(lembur, pulang_awal):
             output = BytesIO()
             with pd.ExcelWriter(output, engine="openpyxl") as writer:
                 lembur.to_excel(writer, sheet_name="Lembur", index=False)
                 pulang_awal.to_excel(writer, sheet_name="Pulang_Awal", index=False)
 
-            # Buka lagi file untuk menambahkan Excel Table
+            # Buka workbook lagi untuk kasih border
             output.seek(0)
             wb = load_workbook(output)
+            thin = Side(border_style="thin", color="000000")
+            border = Border(top=thin, left=thin, right=thin, bottom=thin)
 
             for sheet_name in ["Lembur", "Pulang_Awal"]:
                 ws = wb[sheet_name]
-                if ws.max_row > 1 and ws.max_column > 0:  # hanya kalau ada data
-                    ref = f"A1:{chr(64 + ws.max_column)}{ws.max_row}"
-                    table = Table(displayName=f"Table_{sheet_name}", ref=ref)
-
-                    # Style table
-                    style = TableStyleInfo(
-                        name="TableStyleMedium9",
-                        showFirstColumn=False,
-                        showLastColumn=False,
-                        showRowStripes=True,
-                        showColumnStripes=False
-                    )
-                    table.tableStyleInfo = style
-                    ws.add_table(table)
+                for row in ws.iter_rows(min_row=1, max_row=ws.max_row,
+                                        min_col=1, max_col=ws.max_column):
+                    for cell in row:
+                        cell.border = border
 
             # Simpan ulang
             final_output = BytesIO()
@@ -78,7 +70,7 @@ if uploaded_file:
         excel_data = to_excel(lembur, pulang_awal)
 
         st.download_button(
-            label="📥 Download Rekap Excel (Sudah Ditabelkan)",
+            label="📥 Download Rekap Excel",
             data=excel_data,
             file_name="Rekap_Lembur.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
