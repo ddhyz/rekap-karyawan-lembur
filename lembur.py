@@ -26,19 +26,22 @@ if uploaded_file:
         # Filter karyawan pulang lebih awal (17:40–18:04)
         pulang_awal = df[(df["Jam"] >= time(17, 40)) & (df["Jam"] <= time(18, 4))]
 
+        # Pilih kolom yang ditampilkan
+        kolom_tampil = [c for c in ["Nama", "NIK", "Tgl/Waktu", "Jam"] if c in df.columns]
+
         st.write("### 👨‍💻 Karyawan Lembur (Pulang > 18:05)")
-        st.dataframe(lembur)
+        st.dataframe(lembur[kolom_tampil])
 
         st.write("### 🏃 Karyawan Pulang Lebih Awal (17:40–18:04)")
-        st.dataframe(pulang_awal)
+        st.dataframe(pulang_awal[kolom_tampil])
 
         # Export ke Excel
         def to_excel(lembur, pulang_awal):
             from io import BytesIO
             output = BytesIO()
             with pd.ExcelWriter(output, engine="openpyxl") as writer:
-                lembur.to_excel(writer, sheet_name="Lembur", index=False)
-                pulang_awal.to_excel(writer, sheet_name="Pulang_Awal", index=False)
+                lembur[kolom_tampil].to_excel(writer, sheet_name="Lembur", index=False)
+                pulang_awal[kolom_tampil].to_excel(writer, sheet_name="Pulang_Awal", index=False)
             return output.getvalue()
 
         excel_data = to_excel(lembur, pulang_awal)
@@ -50,3 +53,4 @@ if uploaded_file:
         )
     else:
         st.error("Kolom 'Tgl/Waktu' tidak ditemukan di file absensi!")
+
