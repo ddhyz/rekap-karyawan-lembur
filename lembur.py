@@ -6,6 +6,9 @@ from io import BytesIO
 from openpyxl import load_workbook
 from openpyxl.styles import Border, Side
 
+# Konfigurasi halaman (judul tab browser)
+st.set_page_config(page_title="Rekap Lembur PT. Quantum")
+
 # Judul aplikasi
 st.title("📊 Rekap Lembur PT. Quantum")
 
