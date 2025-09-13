@@ -2,6 +2,9 @@
 import streamlit as st
 import pandas as pd
 from datetime import time
+from io import BytesIO
+from openpyxl import load_workbook
+from openpyxl.worksheet.table import Table, TableStyleInfo
 
 # Judul aplikasi
 st.title("📊 Rekap Absensi: Lembur & Pulang Lebih Awal")
@@ -38,20 +41,44 @@ if uploaded_file:
         st.write("### 🏃 Karyawan Pulang Lebih Awal (17:40–18:04)")
         st.dataframe(pulang_awal)
 
-        # Fungsi export ke Excel
+        # Fungsi export ke Excel dengan Table
         def to_excel(lembur, pulang_awal):
-            from io import BytesIO
             output = BytesIO()
             with pd.ExcelWriter(output, engine="openpyxl") as writer:
                 lembur.to_excel(writer, sheet_name="Lembur", index=False)
                 pulang_awal.to_excel(writer, sheet_name="Pulang_Awal", index=False)
-            return output.getvalue()
+
+            # Buka lagi file untuk menambahkan Excel Table
+            output.seek(0)
+            wb = load_workbook(output)
+
+            for sheet_name in ["Lembur", "Pulang_Awal"]:
+                ws = wb[sheet_name]
+                if ws.max_row > 1 and ws.max_column > 0:  # hanya kalau ada data
+                    ref = f"A1:{chr(64 + ws.max_column)}{ws.max_row}"
+                    table = Table(displayName=f"Table_{sheet_name}", ref=ref)
+
+                    # Style table
+                    style = TableStyleInfo(
+                        name="TableStyleMedium9",
+                        showFirstColumn=False,
+                        showLastColumn=False,
+                        showRowStripes=True,
+                        showColumnStripes=False
+                    )
+                    table.tableStyleInfo = style
+                    ws.add_table(table)
+
+            # Simpan ulang
+            final_output = BytesIO()
+            wb.save(final_output)
+            return final_output.getvalue()
 
         # Buat file Excel untuk diunduh
         excel_data = to_excel(lembur, pulang_awal)
 
         st.download_button(
-            label="📥 Download Rekap Excel",
+            label="📥 Download Rekap Excel (Sudah Ditabelkan)",
             data=excel_data,
             file_name="Rekap_Lembur.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
