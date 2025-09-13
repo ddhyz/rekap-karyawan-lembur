@@ -20,7 +20,10 @@ if uploaded_file:
     df = pd.read_excel(uploaded_file)
 
     # Hapus kolom yang tidak perlu (jika ada)
-    drop_cols = ["Lokasi ID", "ID Number", "VerifyCode", "CardNo", "Jam."]
+    drop_cols = [
+    "Lokasi ID", "ID Number", "VerifyCode", "CardNo", "Jam.",
+    "No.PIN", "Kode Verifikasi", "No.Kartu"
+]
     df = df.drop(columns=[c for c in drop_cols if c in df.columns], errors="ignore")
 
     # Pastikan ada kolom 'Tgl/Waktu'
@@ -84,4 +87,5 @@ if uploaded_file:
 
 else:
     st.info("Silakan upload file absensi untuk diproses.")
+
 
