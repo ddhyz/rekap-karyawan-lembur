@@ -26,8 +26,18 @@ if uploaded_file:
         # Filter karyawan pulang lebih awal (17:40–18:04)
         pulang_awal = df[(df["Jam"] >= time(17, 40)) & (df["Jam"] <= time(18, 4))]
 
-        # Tentukan urutan kolom (No ID, Nama, Tgl/Waktu) jika ada
-        kolom_tampil = [c for c in ["No ID", "Nama", "Tgl/Waktu"] if c in df.columns]
+        # Deteksi otomatis kolom ID (NIK atau No.ID)
+        id_col = None
+        for c in df.columns:
+            if c.strip().lower() in ["nik", "no.id"]:
+                id_col = c
+                break
+
+        # Deteksi otomatis kolom Nama
+        nama_col = next((c for c in df.columns if "nama" in c.lower()), None)
+
+        # Susun kolom tampil: NIK/No.ID, Nama, Tgl/Waktu
+        kolom_tampil = [c for c in [id_col, nama_col, "Tgl/Waktu"] if c]
 
         st.write("### 👨‍💻 Karyawan Lembur (Pulang > 18:05)")
         st.dataframe(lembur[kolom_tampil])
